@@ -24,8 +24,8 @@ def getUsername():
 	name = username.partition(" ")[0]
 	return name
 
-def getFile(username):
-	fileName = 'autoGitWiki.wiki/'+username+"'s-todos.md"
+def getFile(username,wikiRepo):
+	fileName = wikiRepo'/'+username+"'s-todos.md"
 
 	try:
 		with open(fileName,'r') as f:
@@ -73,7 +73,7 @@ def main():
 	if wikiRepo == None:
 		return
 	username = getUsername()
-	fileName = getFile(username)
+	fileName = getFile(username,wikiRepo)
 	todos = inputTodos()
 	if todos != []:
 		composeTodos(fileName,todos)
