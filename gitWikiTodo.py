@@ -1,13 +1,28 @@
-import subprocess, datetime
+import subprocess, datetime, os
 
-#print subprocess.check_output("ls",stderr=subprocess.STDOUT)
+def checkWiki():
+	if not os.path.isdir(".git"):
+		print "this doesn't seem to be a git repo"
+		return None
+	url = subprocess.check_output(["git", "config", "--get", "remote.origin.url"])
+	repo = url[url.rindex('/')+1:url.rindex('.git')]
+	wikiRepo = repo+'.wiki'
+	if not os.path.isdir(wikiRepo):
+		print 'wiki repo not found, git cloning ' + wikiRepo
+		wikiUrl = url[:url.rindex('/')+1]+wikiRepo+'.git'
+		subprocess.call(["git","clone",wikiUrl])
+	else:
+		print "pulling latest wiki"
+		subprocess.call("( cd "+wikiRepo+" && git pull )",shell=True)
+	return wikiRepo
+
 def getUsername():
 	username = subprocess.check_output(["git", "config", "user.name"])
 	name = username.partition(" ")[0]
 	return name
 
 def getFile(username):
-	fileName = 'autoGitWiki.wiki/'+username+"'s todos.md"
+	fileName = 'autoGitWiki.wiki/'+username+"'s-todos.md"
 
 	try:
 		with open(fileName,'r') as f:
@@ -28,7 +43,6 @@ def composeTodos(fileName,todos):
 	for t in todos:
 		push += '<li>'+t+'</li>'
 	push += '</ul>'
-	print fileName
 	with open(fileName,'a') as f:
 		f.write(push)
 		f.close()
@@ -42,12 +56,24 @@ def inputTodos():
 		t = raw_input('')
 	return todos
 
+def pushWikiChanges(wikiRepo,fileName):
+	addName = fileName[fileName.rindex('/')+1:].replace(" ","\ ")
+	addName = addName.replace("'","\\'")
+	print addName
+	subprocess.call("( cd "+wikiRepo+" && git add "+addName+" )", shell = True)
+	subprocess.call("( cd "+wikiRepo+" && git commit -m 'added todos' )", shell = True)
+	subprocess.call("( cd "+wikiRepo+" && git push origin master )", shell = True)
 
 def main():
+	wikiRepo = checkWiki()
+	print 'wiki checked'
+	if wikiRepo == None:
+		return
 	username = getUsername()
 	fileName = getFile(username)
 	todos = inputTodos()
 	if todos != []:
 		composeTodos(fileName,todos)
+		pushWikiChanges(wikiRepo,fileName)
 
 main()
