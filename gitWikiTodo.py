@@ -5,7 +5,10 @@ def checkWiki():
 		print "this doesn't seem to be a git repo"
 		return None
 	url = subprocess.check_output(["git", "config", "--get", "remote.origin.url"])
-	repo = url[url.rindex('/')+1:url.rindex('.git')]
+	if url.find('.git') == -1:
+		repo = url[url.rindex('/')+1:]
+	else:
+		repo = url[url.rindex('/')+1:url.rindex('.git')]
 	wikiRepo = repo+'.wiki'
 	if not os.path.isdir(wikiRepo):
 		print 'wiki repo not found, git cloning ' + wikiRepo
