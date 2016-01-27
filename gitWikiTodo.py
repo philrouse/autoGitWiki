@@ -1,17 +1,9 @@
 import subprocess
 #print subprocess.check_output("ls",stderr=subprocess.STDOUT)
 def getUsername():
-	username = 'Phil'
-	if username == '':
-		with open('gitWikiTodo.py','r') as f:
-			pyString = f.read()
-			u = raw_input("What's you're name?")
-			out = pyString.replace("username = ''","username = '"+u+"'",1)
-			f.close()
-		with open('gitWikiTodo.py','w') as f:
-			f.write(out)
-			username = u
-
+	username = subprocess.check_output(["git", "config", "user.name"])
+	name = username.partition(" ")[0]
+	return name
 
 def getFile(username):
 	fileName = 'autoGitWiki.wiki/'+username+"'s todos.md"
@@ -25,6 +17,12 @@ def getFile(username):
 		with open(fileName,'w') as f:
 			tableHeader = 'Date | Todo\n:---: | :---'
 			f.write(tableHeader)
-			f.close
+			f.close()
+	return fileName
 
+def main():
+	username = getUsername()
+	fileName = getFile(username)
+	print username
 
+main()
