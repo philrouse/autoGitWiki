@@ -6,7 +6,7 @@ def checkWiki():
 		return None
 	url = subprocess.check_output(["git", "config", "--get", "remote.origin.url"])
 	if url.find('.git') == -1:
-		repo = url[url.rindex('/')+1:]
+		repo = url[url.rindex('/')+1:-1]
 	else:
 		repo = url[url.rindex('/')+1:url.rindex('.git')]
 	wikiRepo = repo+'.wiki'
@@ -25,7 +25,7 @@ def getUsername():
 	return name
 
 def getFile(username,wikiRepo):
-	fileName = wikiRepo'/'+username+"'s-todos.md"
+	fileName = wikiRepo+'/'+username+"'s-todos.md"
 
 	try:
 		with open(fileName,'r') as f:
@@ -62,14 +62,12 @@ def inputTodos():
 def pushWikiChanges(wikiRepo,fileName):
 	addName = fileName[fileName.rindex('/')+1:].replace(" ","\ ")
 	addName = addName.replace("'","\\'")
-	print addName
 	subprocess.call("( cd "+wikiRepo+" && git add "+addName+" )", shell = True)
 	subprocess.call("( cd "+wikiRepo+" && git commit -m 'added todos' )", shell = True)
 	subprocess.call("( cd "+wikiRepo+" && git push origin master )", shell = True)
 
 def main():
 	wikiRepo = checkWiki()
-	print 'wiki checked'
 	if wikiRepo == None:
 		return
 	username = getUsername()
