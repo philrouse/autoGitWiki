@@ -24,19 +24,25 @@ def getUsername():
 	name = username.partition(" ")[0]
 	return name
 
-def getFile(username,wikiRepo):
+def getFile(username,wikiRepo,readwrite=0):
 	fileName = wikiRepo+'/'+username+"'s-todos.md"
 
 	try:
 		with open(fileName,'r') as f:
 			f.close()
 	except:
-		subprocess.call(["touch",fileName])
-		print 'todo not found, creating now'
-		with open(fileName,'w') as f:
-			tableHeader = 'Date | Todo\n:---: | :---'
-			f.write(tableHeader)
-			f.close()
+		if readwrite=='read':
+			print 'todo list not found'
+			return 0
+		elif readwrite=='write':
+			subprocess.call(["touch",fileName])
+			print 'todo not found, creating now'
+			with open(fileName,'w') as f:
+				tableHeader = 'Date | Todo\n:---: | :---'
+				f.write(tableHeader)
+				f.close()
+		else:
+			raise Error('incompatible value for readwrite in function getFile')
 	return fileName
 
 def composeTodos(fileName,todos):
@@ -66,15 +72,50 @@ def pushWikiChanges(wikiRepo,fileName):
 	subprocess.call("( cd "+wikiRepo+" && git commit -m 'added todos' )", shell = True)
 	subprocess.call("( cd "+wikiRepo+" && git push origin master )", shell = True)
 
+def matchIdx(lists):
+	taskSize = len(lists[0])
+	for l in lists:
+		if len(l) < taskSize:
+			taskSize = len(l)
+	i = 0
+	while i < taskSize:
+		re = []
+		for l in lists:
+			re.append(l[i])
+		i += 1
+		yield re
+
+def readTodos(username,wikiRepo):
+	fileName = getFile(username,wikiRepo,'read')
+	rawList = ''
+	with open(fileName,'r') as f:
+		rawList = f.read()
+		f.close()
+	lis = []
+	unlis = []
+	idx = 0;
+	while idx != -1:
+		idx = rawList.find("<li>",idx)
+		lis.append(idx)
+		idx = rawList.find("</li>",idx)
+		unlis.append(idx)
+	lis = lis[0:-1]
+	unlis = unlis[0:-1]
+	todos = []
+	for l, u in matchIdx([lis,unlis]):
+		todos.append(rawList[l+4:u])
+	return
+
 def main():
 	wikiRepo = checkWiki()
 	if wikiRepo == None:
 		return
 	username = getUsername()
-	fileName = getFile(username,wikiRepo)
-	todos = inputTodos()
-	if todos != []:
-		composeTodos(fileName,todos)
-		pushWikiChanges(wikiRepo,fileName)
+	readTodos(username,wikiRepo)
+	# fileName = getFile(username,wikiRepo)
+	# todos = inputTodos()
+	# if todos != []:
+	# 	composeTodos(fileName,todos)
+	# 	pushWikiChanges(wikiRepo,fileName)
 
 main()
