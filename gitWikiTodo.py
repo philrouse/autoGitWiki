@@ -101,16 +101,39 @@ def readTodos(username,wikiRepo):
 		unlis.append(idx)
 	lis = lis[0:-1]
 	unlis = unlis[0:-1]
-	todos = []
+	activeTodos = []
+	doneTodos = []
+	i = 0
 	for l, u in matchIdx([lis,unlis]):
-		todos.append(rawList[l+4:u])
+		todo = rawList[l+4:u]
+		if todo.find("<s>") != -1:
+			continue
+		print str(i)+".",todo
+		activeTodos.append([l,u])
+		i += 1
+		if i>9 or l==lis[-1]:
+			done = raw_input("cross off a todo?")
+			crossed = []
+			while done != "":
+				if int(done)>i or int(done)<0:
+					done = raw_input("enter a number between 0 and "+str(i))
+				if int(done) in crossed:
+					done = raw_input("already crossed off, any others?")
+				else:
+					doneTodos.append(activeTodos[int(done)])
+					done = raw_input("any more?")
+			i=0
+	for t in doneTodos:
+		print rawList[t[0]:t[1]]
 	return
 
 def main():
-	wikiRepo = checkWiki()
-	if wikiRepo == None:
-		return
-	username = getUsername()
+	# wikiRepo = checkWiki()
+	# if wikiRepo == None:
+	# 	return
+	# username = getUsername()
+	username = 'Phil'
+	wikiRepo = "autoGitWiki.wiki"
 	readTodos(username,wikiRepo)
 	# fileName = getFile(username,wikiRepo)
 	# todos = inputTodos()
