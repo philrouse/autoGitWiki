@@ -1,4 +1,5 @@
 import subprocess, datetime, os
+from getch import getch
 
 def checkWiki():
 	if not os.path.isdir(".git"):
@@ -85,7 +86,56 @@ def matchIdx(lists):
 		i += 1
 		yield re
 
-def readTodos(username,wikiRepo):
+def crossList(todos,crossed,msg):
+	os.system('cls' if os.name == 'nt' else 'clear')
+	for i, t in enumerate(todos):
+		print str(i)+".",
+		if i in crossed:
+			print "*",
+		print t
+	print msg
+	done = getch()
+	isint = False
+	try:
+		done = int(done)
+		isint = True
+	except:
+		pass
+	if isint==False and done!='n':
+		crossed = crossList(todos,crossed,"enter and number between 0 and "+str(len(todos)-1))
+	elif isint:
+		if done < 0 or done >= len(todos):
+			crossed = crossList(todos,crossed,"enter and number between 0 and "+str(len(todos)-1))
+		elif done in crossed:
+			crossed = crossList(todos,crossed,"already crossed off, any others?"+str(len(todos)-1))
+		else:
+			crossed.append(done)
+			crossed = crossList(todos,crossed,"any more?")
+	return crossed
+
+def writeTodos(rawList,lis,unlis,fileName):
+	activeTodos = []
+	doneTodos = []
+	i = 0
+	for l, u in matchIdx([lis,unlis]):
+		todo = rawList[l:u]
+		if todo.find("<s>") != -1:
+			continue
+		print str(i)+".",todo
+		activeTodos.append(todo)
+		if i%10==9 or l==lis[-1]:
+			doneTodos = doneTodos + [x+10*(i/10) for x in crossList(activeTodos,[],"cross off todos and press 'n' when you're done")]
+			activeTodos = []
+		i += 1
+	os.system('cls' if os.name == 'nt' else 'clear')
+	doneTodos.sort(reverse = True)
+	for t in doneTodos:
+		rawList = rawList[:lis[t]]+"<s>"+rawList[lis[t]:unlis[t]]+"</s>"+rawList[unlis[t]:]
+	with open(fileName,'w') as f:
+		f.write(rawList)
+	return
+
+def getTodos(username,wikiRepo,wr='read'):
 	fileName = getFile(username,wikiRepo,'read')
 	rawList = ''
 	with open(fileName,'r') as f:
@@ -96,45 +146,31 @@ def readTodos(username,wikiRepo):
 	idx = 0;
 	while idx != -1:
 		idx = rawList.find("<li>",idx)
-		lis.append(idx)
+		lis.append(idx+4)
 		idx = rawList.find("</li>",idx)
 		unlis.append(idx)
 	lis = lis[0:-1]
 	unlis = unlis[0:-1]
-	activeTodos = []
-	doneTodos = []
 	i = 0
-	for l, u in matchIdx([lis,unlis]):
-		todo = rawList[l+4:u]
-		if todo.find("<s>") != -1:
-			continue
-		print str(i)+".",todo
-		activeTodos.append([l,u])
-		i += 1
-		if i>9 or l==lis[-1]:
-			done = raw_input("cross off a todo?")
-			crossed = []
-			while done != "":
-				if int(done)>i or int(done)<0:
-					done = raw_input("enter a number between 0 and "+str(i))
-				if int(done) in crossed:
-					done = raw_input("already crossed off, any others?")
-				else:
-					doneTodos.append(activeTodos[int(done)])
-					done = raw_input("any more?")
-			i=0
-	for t in doneTodos:
-		print rawList[t[0]:t[1]]
+	if wr == 'read':
+		for l, u in matchIdx([lis,unlis]):
+			todo = rawList[l:u]
+			if todo.find("<s>") != -1:
+				continue
+			print str(i)+".",todo
+			i += 1
+	elif wr == 'write':
+		writeTodos(rawList,lis,unlis,fileName)
+		pushWikiChanges(wikiRepo,fileName)
 	return
 
 def main():
-	# wikiRepo = checkWiki()
-	# if wikiRepo == None:
-	# 	return
-	# username = getUsername()
-	username = 'Phil'
-	wikiRepo = "autoGitWiki.wiki"
-	readTodos(username,wikiRepo)
+	wikiRepo = checkWiki()
+	if wikiRepo == None:
+		return
+	username = getUsername()
+	print username, wikiRepo
+	getTodos(username,wikiRepo,'write')
 	# fileName = getFile(username,wikiRepo)
 	# todos = inputTodos()
 	# if todos != []:
