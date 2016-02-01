@@ -222,11 +222,11 @@ class gitWikiTodo:
 
 wikiTodo = gitWikiTodo()
 parser = argparse.ArgumentParser()
-parser.add_argument(
-    '-a', '--add', nargs='?', const=True, help='add items to your todo list')
-parser.add_argument(
-    '-r', '--read', nargs='?', const=True, help='read your todo list')
-parser.add_argument('-x', '--cross', nargs='?', const=True,
+parser.add_argument('-a', '--add', action='store_const', const=True,
+                    help='add items to your todo list')
+parser.add_argument('-r', '--read', action='store_const', const=True,
+                    help='read your todo list')
+parser.add_argument('-x', '--cross', action='store_const', const=True,
                     help='cross off items from your todo list')
 args = parser.parse_args()
 if args.add:
