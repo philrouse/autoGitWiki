@@ -2,6 +2,7 @@
 import subprocess
 import datetime
 import os
+import sys
 import argparse
 from getch import getch
 
@@ -29,7 +30,7 @@ class gitWikiTodo:
     def checkWiki(self):
         if not os.path.isdir(".git"):
             print "this doesn't seem to be a git repo"
-            return None
+            sys.exit(1)
         url = subprocess.check_output(
             ["git", "config", "--get", "remote.origin.url"])
         if url.find('.git') == -1:
