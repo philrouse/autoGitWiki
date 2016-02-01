@@ -173,9 +173,19 @@ class gitWikiTodo:
 
 	def add(self):
 		if self.fileName == 0:
-			self.fileName = self.newFile()
+			print self.username+"'s-todos.md not found, do you want to create it? y/n"
+			makeNew = getch()
+			if makeNew == 'y' or makeNew == 'Y':
+				self.fileName = self.newFile()
+			else:
+				return
+		print "\033[?1049h\033[H"
 		todos = self.inputTodos()
+		if todos == []:
+			print "\033[?1049l"
+			return
 		self.writeTodos(todos)
+		print "\033[?1049l"
 		self.pushWikiChanges("added todos")
 		return
 
@@ -183,7 +193,9 @@ class gitWikiTodo:
 		if self.fileName == 0:
 			return
 		markers = self.getTodos()
+		print "\033[?1049h\033[H"
 		self.crossTodos(markers)
+		print "\033[?1049l"
 		self.pushWikiChanges("crossed off todos")
 		return
 
