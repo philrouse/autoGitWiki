@@ -50,6 +50,8 @@ class gitWikiTodo:
     def getUsername(self):
         username = subprocess.check_output(["git", "config", "user.name"])
         name = username.partition(" ")[0]
+        if name.find("\n")!= -1:
+            name = name[:-1]
         return name
 
     def newFile(self):
@@ -238,3 +240,4 @@ elif args.cross:
     wikiTodo.cross()
 else:
     parser.print_help()
+
