@@ -179,6 +179,8 @@ class gitWikiTodo:
         idx = 0
         while idx != -1:
             idx = self.rawList.find("<li>", idx)
+            if idx == -1:
+                continue
             s = idx + 4
             idx = self.rawList.find("</li>", idx)
             e = idx
