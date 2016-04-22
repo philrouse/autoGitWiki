@@ -24,6 +24,7 @@ def matchIdx(lists):
 class gitWikiTodo:
     def __init__(self):
         self.wikiRepo = self.checkWiki()
+        self.updateWikiRepo()
         self.username = self.getUsername()
         self.fileName = self.getFile()
 
@@ -33,24 +34,30 @@ class gitWikiTodo:
             sys.exit(1)
         url = subprocess.check_output(
             ["git", "config", "--get", "remote.origin.url"])
+        self.url = url
         if url.find('.git') == -1:
             repo = url[url.rindex('/') + 1:-1]
         else:
             repo = url[url.rindex('/') + 1:url.rindex('.git')]
         wikiRepo = repo + '.wiki'
-        if not os.path.isdir(wikiRepo):
-            print 'wiki repo not found, git cloning ' + wikiRepo
-            wikiUrl = url[:url.rindex('/') + 1] + wikiRepo + '.git'
+        return wikiRepo
+
+    def updateWikiRepo(self):
+        if not os.path.isdir(self.wikiRepo):
+            print 'wiki repo not found, git cloning ' + self.wikiRepo
+            wikiUrl = (self.url[:self.url.rindex('/') + 1] +
+                       self.wikiRepo + '.git')
             subprocess.call(["git", "clone", wikiUrl])
         else:
             print "pulling latest wiki"
-            subprocess.call("( cd " + wikiRepo + " && git pull )", shell=True)
-        return wikiRepo
+            subprocess.call("( cd " + self.wikiRepo +
+                            " && git pull )", shell=True)
+        return
 
     def getUsername(self):
         username = subprocess.check_output(["git", "config", "user.name"])
         name = username.partition(" ")[0]
-        if name.find("\n")!= -1:
+        if name.find("\n") != -1:
             name = name[:-1]
         return name
 
@@ -159,6 +166,7 @@ class gitWikiTodo:
             self.rawList = self.rawList[:starts[t]] + "<s>" +\
                 self.rawList[starts[t]:ends[t]] + "</s>" +\
                 self.rawList[ends[t]:]
+        self.updateWikiRepo()
         with open(self.fileName, 'w') as f:
             print 'writing file'
             f.write(self.rawList)
@@ -210,6 +218,7 @@ class gitWikiTodo:
         if todos == []:
             print "\033[?1049l"
             return
+        self.updateWikiRepo()
         self.writeTodos(todos)
         print "\033[?1049l"
         self.pushWikiChanges("added todos")
@@ -242,4 +251,3 @@ elif args.cross:
     wikiTodo.cross()
 else:
     parser.print_help()
-
